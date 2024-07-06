@@ -1,7 +1,7 @@
 name: Relase on pocketbase/release
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 0 * * 0"
   workflow_dispatch:
     inputs:
       version:
@@ -12,44 +12,51 @@ jobs:
   check:
     runs-on: ubuntu-latest
     outputs:
-      pocketbase: ${{ steps.pocketbase.outputs.result }}
-      package: ${{ steps.package.outputs.result }}
+      latestPocketbaseVersion: ${{ steps.getLatestPocketbaseVersion.outputs.result }}
+      latestPocketbaseForCasaosVersion: ${{ steps.getLatestPocketbaseForCasaosVersion.outputs.result }}
     steps:
       - name: Get latest pocketbase release
-        id: pocketbase
+        id: getLatestPocketbaseVersion
         uses: actions/github-script@v7
-        env:
-          OWNER: pocketbase
-          REPO: pocketbase
-          EXCLUDES: '["draft", "prerelease"]'
         with:
           result-encoding: string
           script: |
-            const {OWNER,REPO,EXCLUDES} = process.env;
-            const {data} = await github.rest.repos.listReleases({
-              owner: OWNER,
-              repo: REPO
-            })
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: "pocketbase",
+              repo: "pocketbase"
+            });
 
-            const releases = data.filter(release => JSON.parse(EXCLUDES).every(exclude => !release[exclude]))
-            const latest = releases[0]
+            if (!releases || releases.length === 0) {
+              throw new Error('No releases found');
+            }
 
-            return latest.tag_name.replace('v','')
+            const validReleases = releases.filter(release => {
+              if (release.draft || release.prerelease) {
+                return false;
+              }
+              return true;
+            });
 
-      - name: Get latest package version
-        id: package
+            if (validReleases.length === 0) {
+              throw new Error('No valid releases found after applying exclusions');
+            }
+
+            const latestRelease = validReleases[0];
+            const version = latestRelease.tag_name.replace(/^v/, '');
+
+            console.log(`Latest version: ${version}`);
+            return version;
+
+      - name: Get latest published container tag for pocketbase-for-casaos
+        id: getLatestPocketbaseForCasaosVersion
         uses: actions/github-script@v7
-        env:
-          PACKAGE_NAME: pocketbase
-          PACKAGE_TYPE: container
         with:
           result-encoding: string
           script: |
-            const {PACKAGE_NAME,PACKAGE_TYPE} = process.env;
             const {data: packages} = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
               org: context.repo.owner,
-              package_type: PACKAGE_TYPE,
-              package_name: PACKAGE_NAME,
+              package_type: "container",
+              package_name: "pocketbase-for-casaos",
             })
 
             const latest = packages.filter((p) =>
@@ -61,13 +68,13 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: check
-    if: (needs.check.outputs.pocketbase != needs.check.outputs.package) || github.event_name == 'workflow_dispatch'
+    if: (needs.check.outputs.latestPocketbaseVersion != needs.check.outputs.latestPocketbaseForCasaosVersion) || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -81,14 +88,14 @@ jobs:
 
       - name: Get version from needs or input
         id: version
-        run: echo "value=${{ github.event.inputs.version || needs.check.outputs.pocketbase }}" >> $GITHUB_OUTPUT
+        run: echo "value=${{ github.event.inputs.version || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/muchobien/pocketbase
+            ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
             type=semver,pattern={{version}},value=${{ steps.version.outputs.value }}
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.value }}
@@ -100,8 +107,8 @@ jobs:
           context: .
           push: true
           provenance: false
-          build-args: VERSION=${{ steps.version.outputs.value }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          build-args: PB_VERSION=${{ steps.version.outputs.value }}
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
