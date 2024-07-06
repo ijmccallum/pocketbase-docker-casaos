@@ -53,17 +53,23 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const {data: packages} = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
-              username: context.repo.owner,
-              package_type: "container",
-              package_name: "pocketbase-for-casaos",
-            })
+            try {
+              
+              const {data: packages} = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+                username: context.repo.owner,
+                package_type: "container",
+                package_name: "pocketbase-for-casaos",
+              })
 
-            const latest = packages.filter((p) =>
-              p.metadata.container.tags.includes("latest")
-            )[0];
+              const latest = packages.filter((p) =>
+                p.metadata.container.tags.includes("latest")
+              )[0];
 
-            return latest.metadata.container.tags.find((v) => /^v?\d+\.\d+\.\d+$/.test(v)) || '0.0.0'
+              return latest.metadata.container.tags.find((v) => /^v?\d+\.\d+\.\d+$/.test(v)) || '0.0.0'
+            } catch (error) {
+              console.log(error);
+              return '0.0.0';
+            }
 
   release:
     runs-on: ubuntu-latest
@@ -97,9 +103,9 @@ jobs:
           images: |
             ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.version.outputs.value }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.value }}
-            type=semver,pattern={{major}},value=${{ steps.version.outputs.value }}
+            type=semver,pattern={{version}},value=${{ steps.getLatestPocketbaseVersion.outputs.value }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.getLatestPocketbaseVersion.outputs.value }}
+            type=semver,pattern={{major}},value=${{ steps.getLatestPocketbaseVersion.outputs.value }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -107,7 +113,7 @@ jobs:
           context: .
           push: true
           provenance: false
-          build-args: PB_VERSION=${{ steps.version.outputs.value }}
+          build-args: PB_VERSION=${{ steps.getLatestPocketbaseVersion.outputs.value }}
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
