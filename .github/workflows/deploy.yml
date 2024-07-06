@@ -93,7 +93,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version from needs or input
-        id: version
+        id: getPBVersion
         run: echo "value=${{ github.event.inputs.version || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
 
       - name: Docker meta
@@ -103,9 +103,9 @@ jobs:
           images: |
             ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.version.outputs.value }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.value }}
-            type=semver,pattern={{major}},value=${{ steps.version.outputs.value }}
+            type=semver,pattern={{version}},value=${{ steps.getPBVersion.outputs.value }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.getPBVersion.outputs.value }}
+            type=semver,pattern={{major}},value=${{ steps.getPBVersion.outputs.value }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -113,7 +113,7 @@ jobs:
           context: .
           push: true
           provenance: false
-          build-args: PB_VERSION=${{ steps.getLatestPocketbaseVersion.outputs.value }}
+          build-args: PB_VERSION=${{ steps.getPBVersion.outputs.value }}
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
