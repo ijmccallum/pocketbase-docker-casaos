@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://pocketbase.io/">
     <img alt="pocketbase logo" height="128" src="https://pocketbase.io/images/logo.svg">
-    <h1 align="center">Docker image for PocketBase</h1>
+    <h1 align="center">Docker image to run PocketBase in CasaOS</h1>
   </a>
 </p>
 
@@ -16,28 +16,22 @@
 
 ---
 
-## Supported Architectures
+`ghcr.io/ijmccallum/pocketbase-for-casaos:latest`
 
-Simply pulling `ghcr.io/muchobien/pocketbase:latest` should retrieve the correct image for your arch.
+## Why is this a thing?
 
-The architectures supported by this image are:
-
-| Architecture | Available |
-| :----------: | :-------: |
-|    amd64     |    ✅     |
-|    arm64     |    ✅     |
-|    armv7     |    ✅     |
+I'm having a crack at running PocketBase on CasaOS (which I've got running on a Zimabord). Using the image published by the repo from which I've forked didn't work properly (it started, but no bash for me to go poke about in). So I've spun this repo up to publish a docker image with Pocketbase _and_ bash. Bonus points - it's also a way to let me make any future tweaks that always come up with this kind of thing.
 
 ## Version Tags
 
 This image provides various versions that are available via tags. Please read the descriptions carefully and exercise caution when using unstable or development tags.
 
-|  Tag   | Available | Description                     |
-| :----: | :-------: | ------------------------------- |
-| latest |    ✅     | Stable releases from PocketBase |
-| x.x.x  |    ✅     | Patch release from PocketBase   |
-|  x.x   |    ✅     | Minor release from PocketBase   |
-|   x    |    ✅     | Major release from PocketBase   |
+|  Tag   | Description                     |
+| :----: | ------------------------------- |
+| latest | Stable releases from PocketBase |
+| x.x.x  | Patch release from PocketBase   |
+|  x.x   | Minor release from PocketBase   |
+|   x    | Major release from PocketBase   |
 
 ## Application Setup
 
@@ -47,13 +41,13 @@ Access the webui at `<your-ip>:8090`, for more information check out [PocketBase
 
 Here are some example snippets to help you get started creating a container.
 
-### docker-compose (recommended)
+### docker-compose
 
 ```yml
 version: "3.7"
 services:
   pocketbase:
-    image: ghcr.io/muchobien/pocketbase:latest
+    image: ghcr.io/ijmccallum/pocketbase:latest
     container_name: pocketbase
     restart: unless-stopped
     command:
@@ -85,12 +79,14 @@ docker run -d \
   -v /path/to/public:/pb_public `#optional` \
   -v /path/to/hooks:/pb_hooks `#optional` \
   --restart unless-stopped \
-  ghcr.io/muchobien/pocketbase:latest \
+  ghcr.io/ijmccallum/pocketbase:latest \
   --encryptionEnv ENCRYPTION `#optional`
 ```
 
 ## Built the image yourself
+
 Copy `Dockerfile` and `docker-compose.yml` to the root directory, then update the `docker-compose.yml` file to build the image instead of pulling:
+
 ```yml
 version: "3.7"
 services:

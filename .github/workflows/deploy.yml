@@ -53,8 +53,8 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const {data: packages} = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
-              org: context.repo.owner,
+            const {data: packages} = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+              username: context.repo.owner,
               package_type: "container",
               package_name: "pocketbase-for-casaos",
             })
