@@ -4,8 +4,11 @@ on:
     - cron: "0 0 * * 0"
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to release"
+      pocketbaseVersion:
+        description: "Pocketbase Version to pull"
+        required: true
+      thisContainerVersion:
+        description: "This Container Version to publish"
         required: true
 
 jobs:
@@ -92,9 +95,13 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get version from needs or input
+      - name: Get Pocketbase version from needs or input
         id: getPBVersion
-        run: echo "value=${{ github.event.inputs.version || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
+        run: echo "value=${{ github.event.inputs.pocketbaseVersion || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
+
+      - name: Get this container version to publish from needs or input
+        id: getContainerVersion
+        run: echo "value=${{ github.event.inputs.thisContainerVersion || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
@@ -103,9 +110,9 @@ jobs:
           images: |
             ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.getPBVersion.outputs.value }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.getPBVersion.outputs.value }}
-            type=semver,pattern={{major}},value=${{ steps.getPBVersion.outputs.value }}
+            type=semver,pattern={{version}},value=${{ steps.getContainerVersion.outputs.value }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.getContainerVersion.outputs.value }}
+            type=semver,pattern={{major}},value=${{ steps.getContainerVersion.outputs.value }}
 
       - name: Build and push
         uses: docker/build-push-action@v6

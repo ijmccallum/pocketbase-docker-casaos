@@ -26,12 +26,13 @@ I'm having a crack at running PocketBase on CasaOS (which I've got running on a 
 
 This image provides various versions that are available via tags. Please read the descriptions carefully and exercise caution when using unstable or development tags.
 
-|  Tag   | Description                     |
-| :----: | ------------------------------- |
-| latest | Stable releases from PocketBase |
-| x.x.x  | Patch release from PocketBase   |
-|  x.x   | Minor release from PocketBase   |
-|   x    | Major release from PocketBase   |
+|   Tag   | Description                     |
+| :-----: | ------------------------------- |
+| latest  | Stable releases from PocketBase |
+| x.x.x+y | Patch release of this Repo      |
+|  x.x.x  | Patch release from PocketBase   |
+|   x.x   | Minor release from PocketBase   |
+|    x    | Major release from PocketBase   |
 
 ## Application Setup
 
