@@ -101,7 +101,12 @@ jobs:
 
       - name: Get this container version to publish from needs or input
         id: getContainerVersion
-        run: echo "value=${{ github.event.inputs.thisContainerVersion || needs.check.outputs.latestPocketbaseForCasaosVersion }}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event.inputs.thisContainerVersion }}" != "" ]; then
+            echo "value=${{ github.event.inputs.thisContainerVersion }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=${{ needs.check.outputs.latestPocketbaseVersion }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Docker meta
         id: meta
@@ -110,6 +115,7 @@ jobs:
           images: |
             ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
+            value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{version}},value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{major}},value=${{ steps.getContainerVersion.outputs.value }}
