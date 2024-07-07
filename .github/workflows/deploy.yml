@@ -115,10 +115,11 @@ jobs:
           images: |
             ghcr.io/ijmccallum/pocketbase-for-casaos
           tags: |
-            value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{version}},value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.getContainerVersion.outputs.value }}
             type=semver,pattern={{major}},value=${{ steps.getContainerVersion.outputs.value }}
+            type=raw,value=${{ steps.getContainerVersion.outputs.value }}
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v6
