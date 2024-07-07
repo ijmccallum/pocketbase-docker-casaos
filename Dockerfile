@@ -11,19 +11,18 @@ RUN curl -L \
     https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip
 RUN unzip pocketbase_${PB_VERSION}_linux_amd64.zip 
 RUN chmod +x /pocketbase
-RUN mkdir -p /pb_data /pb_public /pb_hooks
 
 FROM alpine:3
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN apk add --no-cache bash
 
-RUN adduser -D pocketbase
-USER pocketbase
-
-
 COPY --from=downloader /pocketbase /usr/local/bin/pocketbase
-COPY --from=downloader /pb_data /pb_public /pb_hooks
+RUN mkdir -p /pb_data /pb_public /pb_hooks 
 VOLUME /pb_data
+
+RUN adduser -D pocketbase
+RUN chown -R pocketbase:pocketbase /pb_data /pb_public /pb_hooks
+USER pocketbase
 
 EXPOSE 8090
 
