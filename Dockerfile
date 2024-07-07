@@ -22,6 +22,7 @@ VOLUME /pb_data
 
 RUN adduser -D pocketbase
 RUN chown -R pocketbase:pocketbase /pb_data /pb_public /pb_hooks
+RUN chown pocketbase:pocketbase /bin/bash
 USER pocketbase
 
 EXPOSE 8090
